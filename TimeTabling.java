@@ -15,14 +15,13 @@ public class TimeTabling {
     static int jumlahexam;
     
     static int timeslot[]; 
-    static int conflict_matrix[][]; 	
+    static int conflict_matrix[][]; 
 	
 	static int course_sorted [][];
 	static int hasil_timeslot[][];
 	
 	private static Scanner scanner;
-	private static Course course;
-	private static Schedule schedule;
+	
 	
     public static void main(String[] args) throws IOException {
         scanner = new Scanner(System.in);
@@ -37,35 +36,24 @@ public class TimeTabling {
         
         file = folderDataset + filePilihanInput;
         
-        course = new Course(file);
-        jumlahexam = course.getJumlahCourse();
         
-        conflict_matrix = new int[jumlahexam][jumlahexam];  
+		
+        Course course = new Course(file);
+        int jumlahexam = course.getJumlahCourse();
+        
         conflict_matrix = course.getConflictMatrix();
+        int jumlahmurid = course.getJumlahMurid();
         
-        
-		
-		
+
 		course_sorted = course.sortingByDegree(conflict_matrix, jumlahexam);
 		
-		schedule = new Schedule(filePilihanOutput, conflict_matrix, jumlahexam);
-		timeslot = new int[jumlahexam];
-		
-		
 		long starttime = System.nanoTime();
-		timeslot = schedule.schedulingByDegree(course_sorted, timeslot);
+		new Optimization(file).getTimeslotByHillClimbing(conflict_matrix, course_sorted, jumlahexam, jumlahmurid, 1000000); // use hillclimbing methode for iterates 1000000 times
 		long endtime = System.nanoTime();
 		
 		double runningtime = (double) (endtime - starttime)/1000000000;
 		
-		int jumlahMurid = course.getJumlahMurid();
-		
-		schedule.printSchedule(filePilihanOutput, timeslot);
-		
 		System.out.println("Waktu eksekusi yang dibutuhkan adalah selama " + runningtime + " detik.");
-		
-		writeSolFile(hasil_timeslot, filePilihanOutput);
-		System.out.println("Penalti : " + Evaluator.getPenalty(conflict_matrix, hasil_timeslot, jumlahMurid));
     }
     
     public static void writeSolFile(int[][] hasiltimeslot, String namaFileOutput) throws IOException {
