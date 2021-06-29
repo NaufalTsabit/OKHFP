@@ -10,18 +10,10 @@ public class TimeTabling {
 									{"tre-s-92", "Trent92"}, {"uta-s-92", "TorontoAS92"}, {"ute-s-92", "TorontoE92"}, {"yor-f-83", "YorkMills83"}
 								};
     
-    static String file, filePilihanInput, filePilihanOutput;
-    
-    static int jumlahexam;
-    
-    static int timeslot[]; 
-    static int conflict_matrix[][]; 
-	
-	static int course_sorted [][];
-	static int hasil_timeslot[][];
+    static int timeslot[]; // fill with course & its timeslot
+    static int[][] conflict_matrix, course_sorted, hasil_timeslot;
 	
 	private static Scanner scanner;
-	
 	
     public static void main(String[] args) throws IOException {
         scanner = new Scanner(System.in);
@@ -31,10 +23,10 @@ public class TimeTabling {
         System.out.print("\nSilahkan pilih file untuk dijadwalkan : ");
         int pilih = scanner.nextInt();
         
-        filePilihanInput = namafile[pilih-1][0];
-        filePilihanOutput = namafile[pilih-1][1];
+        String filePilihanInput = namafile[pilih-1][0];
+        String filePilihanOutput = namafile[pilih-1][1];
         
-        file = folderDataset + filePilihanInput;
+        String file = folderDataset + filePilihanInput;
         
         
 		
@@ -47,33 +39,74 @@ public class TimeTabling {
 
 		course_sorted = course.sortingByDegree(conflict_matrix, jumlahexam);
 		
-		long starttime = System.nanoTime();
-		new Optimization(file).getTimeslotByHillClimbing(conflict_matrix, course_sorted, jumlahexam, jumlahmurid, 1000000); // use hillclimbing methode for iterates 1000000 times
-		long endtime = System.nanoTime();
 		
-		double runningtime = (double) (endtime - starttime)/1000000000;
 		
-		System.out.println("Waktu eksekusi yang dibutuhkan adalah selama " + runningtime + " detik.");
+		long starttimeLargestDegree = System.nanoTime();
+		Schedule schedule = new Schedule(file, conflict_matrix, jumlahexam);
+		timeslot = schedule.schedulingByDegree(course_sorted);
+		int[][] timeslotByLargestDegree = schedule.getSchedule();
+		long endtimeLargestDegree = System.nanoTime();
+		
+		
+		Optimization optimization = new Optimization(file, conflict_matrix, course_sorted, jumlahexam, jumlahmurid, 1000000);
+		
+		long starttimeHC = System.nanoTime();
+		optimization.getTimeslotByHillClimbing(); 
+		long endtimeHC = System.nanoTime();
+		
+		
+		long starttimeSA = System.nanoTime();
+	
+		long endtimeSA = System.nanoTime();
+		
+		long starttimeTS = System.nanoTime();
+		optimization.getTimeslotByTabuSearch();
+		long endtimeTS = System.nanoTime();
+		double minus = Evaluator.getPenalty(conflict_matrix, optimization.getTimeslotHillClimbing(), jumlahmurid) - Evaluator.getPenalty(conflict_matrix, optimization.getTimeslotTabuSearch(), jumlahmurid);
+		double delta = minus/Evaluator.getPenalty(conflict_matrix, optimization.getTimeslotHillClimbing(), jumlahmurid);
+		
+		System.out.println("PENJADWALAN UNTUK " + filePilihanOutput + "\n");
+		
+		System.out.println("Timeslot dibutuhkan (menggunakan \"Constructive Heuristics\") 	: " + schedule.getJumlahTimeSlot(schedule.getSchedule()));
+		System.out.println("Penalti \"Constructive Heuristics\" 				: " + Evaluator.getPenalty(conflict_matrix, schedule.getSchedule(), jumlahmurid));
+		System.out.println("Waktu eksekusi yang dibutuhkan \"Constructive Heuristics\" " + ((double) (endtimeLargestDegree - starttimeLargestDegree)/1000000000) + " detik.\n");
+		
+		System.out.println("Timeslot dibutuhkan (menggunakan Hill Climbing) 		: " + optimization.getJumlahTimeslotHC());
+		System.out.println("Penalti Hill Climbing 						: " + Evaluator.getPenalty(conflict_matrix, optimization.getTimeslotHillClimbing(), jumlahmurid));
+		System.out.println("Waktu eksekusi yang dibutuhkan Hill Climbing " + ((double) (endtimeHC - starttimeHC)/1000000000) + " detik.\n");
+		
+		System.out.println("Timeslot dibutuhkan (menggunakan Tabu Search) 			: " + optimization.getJumlahTimeslotTabuSearch());
+		System.out.println("Penalti Tabu Search 						: " + Evaluator.getPenalty(conflict_matrix, optimization.getTimeslotTabuSearch(), jumlahmurid));
+		System.out.println("Waktu eksekusi yang dibutuhkan Tabu Search " + ((double) (endtimeTS - starttimeTS)/1000000000) + " detik.");
+
+		System.out.println("perbandingan Hill Climbing dengan Tabu Search (delta): " + delta);
     }
     
     public static void writeSolFile(int[][] hasiltimeslot, String namaFileOutput) throws IOException {
-		
-    	hasil_timeslot = new int[jumlahexam][2];
-    	for (int course = 0; course < jumlahexam; course++) {
-    		hasil_timeslot[course][0] = (course+1);
-    		hasil_timeslot[course][1] = timeslot[course];
-    	}
-    	
-    	String directoryOutput = "D:/Kuliah/OKH/FP/ExamTimetableEvaluation/" + namaFileOutput +".sol";
+    	String directoryOutput = "C:/Users/ZAP/Google Drive/KULIAH/OKH/Tugas/UAS/ExamTimetableEvaluation/" + namaFileOutput +".sol";
         FileWriter writer = new FileWriter(directoryOutput, true);
-        for (int i = 0; i <hasil_timeslot.length; i++) {
-            for (int j = 0; j < hasil_timeslot[i].length; j++) {
-                  writer.write(hasil_timeslot[i][j]+ " ");
+        for (int i = 0; i < hasiltimeslot.length; i++) {
+            for (int j = 0; j < hasiltimeslot[i].length; j++) {
+                  writer.write(hasiltimeslot[i][j]+ " ");
             }
             writer.write("\n");
         }
         writer.close();
         
 		System.out.println("\nFile penjadwalan " + namaFileOutput+ " berhasil dibuat");
+	}
+    
+    public static void writePenaltyListFile(double[] penaltyList, String namaFileOutput) throws IOException {
+    	String directoryOutput = "C:/Users/ZAP/Google Drive/KULIAH/OKH/Tugas/UAS/" + namaFileOutput +".txt";
+        FileWriter writer = new FileWriter(directoryOutput, true);
+        
+        for (int j = 0; j < penaltyList.length; j++) {
+            writer.write(penaltyList[j]+ " ");
+            writer.write("\n");
+//        	System.out.println(penaltyList[j]);
+        }
+        writer.close();
+        
+		System.out.println("\nFile list penalty " + namaFileOutput+ " berhasil dibuat");
 	}
 }

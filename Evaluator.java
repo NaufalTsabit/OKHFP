@@ -1,22 +1,16 @@
 import java.util.Random;
 
 public class Evaluator {
-
-	public Evaluator(int[][] timeslot, int jumlahCourse) {
-		
-	}
 	
-	public static int[][] copyArray(int[][] arr) {
-		int[][] arrcop = new int[arr.length][arr.length];
+	public static int[][] getTimeslot(int[][] timeslot) {
+		int[][] copySolution = new int[timeslot.length][2];
 		
-		for(int i = 0; i < arr.length; i++) {
-			for(int j = 0; j < arr.length; j++) {
-				arrcop[i][j] = arr[i][j];
-			}
+		for(int i = 0; i < timeslot.length; i++) {
+			copySolution[i][0] = timeslot[i][0];
+			copySolution[i][1] = timeslot[i][1];
 		}
 		
-		return arrcop;
-		
+		return copySolution;
 	}
 	
 	public static double getPenalty(int[][] matrix, int[][] jadwal, int jumlahMurid) {
