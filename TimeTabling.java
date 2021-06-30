@@ -44,7 +44,6 @@ public class TimeTabling {
 		long starttimeLargestDegree = System.nanoTime();
 		Schedule schedule = new Schedule(file, conflict_matrix, jumlahexam);
 		timeslot = schedule.schedulingByDegree(course_sorted);
-		int[][] timeslotByLargestDegree = schedule.getSchedule();
 		long endtimeLargestDegree = System.nanoTime();
 		
 		
@@ -55,9 +54,7 @@ public class TimeTabling {
 		long endtimeHC = System.nanoTime();
 		
 		
-		long starttimeSA = System.nanoTime();
-	
-		long endtimeSA = System.nanoTime();
+		
 		
 		long starttimeTS = System.nanoTime();
 		optimization.getTimeslotByTabuSearch();

@@ -1,6 +1,5 @@
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -84,7 +83,6 @@ public class Optimization {
 		timeslotTabuSearch = schedule.getSchedule();
 		initialPenalty = Evaluator.getPenalty(conflict_matrix, timeslotTabuSearch, jumlahmurid);
 		
-		int[][] bestTimeslot = Evaluator.getTimeslot(timeslotTabuSearch); // handle current best timeslot
 		int[][] bestcandidate  = Evaluator.getTimeslot(timeslotTabuSearch);
 		int[][] timeslotTabuSearchSementara = Evaluator.getTimeslot(timeslotTabuSearch);
 		
@@ -100,9 +98,7 @@ public class Optimization {
         int iteration=0;
         
       
-        double penalty1 = 0;
-        double penalty2 = 0;
-        double penalty3 = 0;
+        
         
         boolean terminate = false;
         
@@ -181,5 +177,9 @@ public class Optimization {
 		return tabuSearchPenaltyList1;
 	}
 	
+	private static int random(int number) {
+		Random random = new Random();
+		return random.nextInt(number);
+	}
 	
 }

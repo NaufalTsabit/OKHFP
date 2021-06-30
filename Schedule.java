@@ -55,6 +55,7 @@ public class Schedule {
 				}
 					else
 						timeslotindex = timeslotindex+1; 
+			}
 		}
 		return this.timeslot;
     }
